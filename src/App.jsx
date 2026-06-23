@@ -17,12 +17,24 @@ import { ProjectScreen } from "./components/ProjectScreen.jsx";
 // App — state management and routing only. All UI lives in /components/.
 // ---------------------------------------------------------------------------
 
+const normalizeProject = (project) => ({
+  progress: 0,
+  archived: false,
+  ...project,
+});
+
+const normalizeProjects = (items) => items.map(normalizeProject);
+
 export default function App() {
   const [now, setNow] = useState(() => Date.now());
   const [activeProjectId, setActiveProjectId] = useState(null);
   const [projects, setProjects] = useState(() => (IS_DEV ? MOCK_PROJECTS : []));
   const [isLoaded, setIsLoaded] = useState(IS_DEV);
   const [syncStatus, setSyncStatus] = useState("idle");
+  const [theme, setTheme] = useState(
+    () => localStorage.getItem("redlineshift_theme") || "light",
+  );
+  const [showArchived, setShowArchived] = useState(false);
   const [token, setToken] = useState(() =>
     IS_DEV ? "dev" : localStorage.getItem("redlineshift_token") || null,
   );
@@ -33,6 +45,11 @@ export default function App() {
     localStorage.setItem("redlineshift_token", newToken);
     setToken(newToken);
   };
+
+  useEffect(() => {
+    localStorage.setItem("redlineshift_theme", theme);
+    document.documentElement.classList.toggle("dark", theme === "dark");
+  }, [theme]);
 
   const handleLogout = () => {
     localStorage.removeItem("redlineshift_token");
@@ -56,7 +73,7 @@ export default function App() {
       try {
         setSyncStatus("syncing");
         const data = await fetchWorkspace(token);
-        setProjects(data.projects || []);
+        setProjects(normalizeProjects(data.projects || []));
         setIsLoaded(true);
         setSyncStatus("idle");
       } catch (err) {
@@ -141,6 +158,8 @@ export default function App() {
         name: "Untitled Project",
         emoji: "✧",
         deadline: Date.now() + 7 * MS_PER_DAY,
+        progress: 0,
+        archived: false,
         blocks: [
           { id: generateId(), type: "h1", text: "Title" },
           { id: generateId(), type: "p", text: "" },
@@ -154,8 +173,21 @@ export default function App() {
     if (activeProjectId === id) setActiveProjectId(null);
   };
 
+  const handleArchiveProject = (id) => {
+    setProjects((prev) =>
+      prev.map((project) =>
+        project.id === id ? { ...project, archived: true } : project,
+      ),
+    );
+    if (activeProjectId === id) setActiveProjectId(null);
+  };
+
+  const handleToggleTheme = () => {
+    setTheme((current) => (current === "dark" ? "light" : "dark"));
+  };
+
   // ── Render ────────────────────────────────────────────────────────────────
-  if (!token) return <WelcomeScreen onLogin={handleLogin} />;
+  if (!token) return <WelcomeScreen onLogin={handleLogin} theme={theme} />;
 
   if (!isLoaded) {
     return (
@@ -170,28 +202,41 @@ export default function App() {
   const activeProject = projects.find((p) => p.id === activeProjectId);
 
   return (
-    <div className="min-h-screen text-gray-900 font-sans selection:bg-black selection:text-white">
+    <div
+      className={`min-h-screen font-sans selection:bg-black selection:text-white transition-colors duration-300 ${
+        theme === "dark"
+          ? "bg-zinc-950 text-zinc-100"
+          : "bg-white text-gray-900"
+      }`}
+    >
       {activeProject ? (
         <ProjectScreen
           project={activeProject}
           now={now}
+          theme={theme}
           onUpdate={(updates) => handleUpdateProject(activeProject.id, updates)}
           onBack={() => setActiveProjectId(null)}
           onDelete={() => handleDeleteProject(activeProject.id)}
+          onArchive={() => handleArchiveProject(activeProject.id)}
         />
       ) : (
         <MainScreen
           projects={projects}
           now={now}
           syncStatus={syncStatus}
+          theme={theme}
+          showArchived={showArchived}
           onSelect={setActiveProjectId}
           onCreate={handleCreateProject}
+          onToggleTheme={handleToggleTheme}
+          onToggleArchived={() => setShowArchived((current) => !current)}
           onOpenSettings={() => setShowSettings(true)}
         />
       )}
       {showSettings && (
         <SettingsModal
           token={token}
+          theme={theme}
           onClose={() => setShowSettings(false)}
           onLogout={handleLogout}
           onRotate={handleRotateToken}

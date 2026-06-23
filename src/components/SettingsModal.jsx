@@ -27,17 +27,17 @@ export function SettingsModal({ token, onClose, onLogout, onRotate, onNuke }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
       <div
-        className="absolute inset-0 bg-white/80 backdrop-blur-sm"
+        className="absolute inset-0 bg-white/80 dark:bg-black/70 backdrop-blur-sm"
         onClick={onClose}
       ></div>
-      <div className="bg-white border border-gray-300 w-full max-w-lg shadow-2xl relative flex flex-col p-8">
-        <div className="flex justify-between items-center mb-8 border-b border-gray-200 pb-4">
+      <div className="bg-white dark:bg-zinc-950 border border-gray-300 dark:border-zinc-800 w-full max-w-lg shadow-2xl relative flex flex-col p-8 text-gray-900 dark:text-zinc-100">
+        <div className="flex justify-between items-center mb-8 border-b border-gray-200 dark:border-zinc-800 pb-4">
           <h3 className="text-lg font-light tracking-tight">
             Workspace Settings
           </h3>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-black font-bold focus:outline-none"
+            className="text-gray-400 hover:text-black dark:hover:text-white font-bold focus:outline-none"
           >
             ✕
           </button>
@@ -48,7 +48,7 @@ export function SettingsModal({ token, onClose, onLogout, onRotate, onNuke }) {
           <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
             Your Access Token
           </label>
-          <p className="text-sm text-gray-500 mb-4 leading-relaxed">
+          <p className="text-sm text-gray-500 dark:text-zinc-400 mb-4 leading-relaxed">
             Copy and save this string safely. It&apos;s the only way to access
             this workspace from other devices.
           </p>
@@ -57,7 +57,7 @@ export function SettingsModal({ token, onClose, onLogout, onRotate, onNuke }) {
               type="text"
               readOnly
               value={token}
-              className="flex-1 bg-gray-50 border border-gray-300 border-r-0 p-3 font-mono text-xs text-gray-600 focus:outline-none"
+              className="flex-1 bg-gray-50 dark:bg-zinc-900 border border-gray-300 dark:border-zinc-800 border-r-0 p-3 font-mono text-xs text-gray-600 dark:text-zinc-300 focus:outline-none"
             />
             <button
               onClick={handleCopy}

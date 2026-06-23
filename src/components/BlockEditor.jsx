@@ -18,17 +18,17 @@ const parseMarkdownPrefix = (text) => {
 };
 
 const BLOCK_STYLE = {
-  h1: "text-3xl font-normal tracking-tight text-black mt-8 mb-4",
-  h2: "text-2xl font-normal tracking-tight text-gray-800 mt-6 mb-3",
-  h3: "text-xl font-medium tracking-tight text-gray-800 mt-5 mb-2",
-  li: "text-base text-gray-700 mb-2 placeholder-gray-300",
-  p: "text-base leading-relaxed text-gray-700 mb-3 placeholder-gray-300",
+  h1: "text-3xl font-normal tracking-tight mt-6 mb-3",
+  h2: "text-2xl font-normal tracking-tight mt-5 mb-2",
+  h3: "text-xl font-medium tracking-tight mt-4 mb-2",
+  li: "text-base mb-2 placeholder-gray-300",
+  p: "text-base leading-relaxed mb-3 placeholder-gray-300",
 };
 
 // --- BlockNode ---
 // A single auto-resizing textarea that renders one block.
 
-function BlockNode({ block, setRef, onChange, onKeyDown }) {
+function BlockNode({ block, setRef, onChange, onKeyDown, theme }) {
   const internalRef = useRef(null);
 
   const handleRef = (el) => {
@@ -50,7 +50,9 @@ function BlockNode({ block, setRef, onChange, onKeyDown }) {
   return (
     <div className={`relative ${block.type === "li" ? "pl-6" : ""}`}>
       {block.type === "li" && (
-        <span className="absolute left-0 top-2.5 w-1.5 h-1.5 bg-black"></span>
+        <span
+          className={`absolute left-0 top-2.5 w-1.5 h-1.5 ${theme === "dark" ? "bg-zinc-100" : "bg-black"}`}
+        ></span>
       )}
       <textarea
         ref={handleRef}
@@ -59,7 +61,7 @@ function BlockNode({ block, setRef, onChange, onKeyDown }) {
           block.type === "p" ? "Type '# ' for headings, '- ' for lists..." : ""
         }
         rows={1}
-        className={baseClass + (BLOCK_STYLE[block.type] ?? BLOCK_STYLE.p)}
+        className={`${baseClass}${BLOCK_STYLE[block.type] ?? BLOCK_STYLE.p} ${theme === "dark" ? "text-zinc-100" : "text-gray-700"}`}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={onKeyDown}
       />
@@ -70,7 +72,7 @@ function BlockNode({ block, setRef, onChange, onKeyDown }) {
 // --- BlockEditor ---
 // Manages the full list of blocks and keyboard navigation.
 
-export function BlockEditor({ blocks, onChange, onSave }) {
+export function BlockEditor({ blocks, onChange, onSave, theme = "light" }) {
   const [focusId, setFocusId] = useState(null);
   const inputRefs = useRef({});
 
@@ -150,7 +152,7 @@ export function BlockEditor({ blocks, onChange, onSave }) {
   };
 
   return (
-    <div className="max-w-3xl mx-auto pb-32">
+    <div className="max-w-2xl mx-auto pb-24">
       {blocks.map((block, i) => (
         <BlockNode
           key={block.id}
@@ -158,6 +160,7 @@ export function BlockEditor({ blocks, onChange, onSave }) {
           setRef={(el) => (inputRefs.current[block.id] = el)}
           onChange={(val) => updateBlock(i, val)}
           onKeyDown={(e) => handleKeyDown(e, i)}
+          theme={theme}
         />
       ))}
     </div>
