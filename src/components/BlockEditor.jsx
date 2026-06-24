@@ -17,18 +17,35 @@ const parseMarkdownPrefix = (text) => {
   return null;
 };
 
-const BLOCK_STYLE = {
-  h1: "text-3xl font-normal tracking-tight mt-6 mb-3",
-  h2: "text-2xl font-normal tracking-tight mt-5 mb-2",
-  h3: "text-xl font-medium tracking-tight mt-4 mb-2",
-  li: "text-base mb-2 placeholder-gray-300",
-  p: "text-base leading-relaxed mb-3 placeholder-gray-300",
+const BLOCK_ROW_STYLE = {
+  h1: "mt-6 mb-3",
+  h2: "mt-5 mb-2",
+  h3: "mt-4 mb-2",
+  li: "",
+  p: "",
+};
+
+const BLOCK_TEXT_STYLE = {
+  h1: "text-3xl font-normal tracking-tight",
+  h2: "text-2xl font-normal tracking-tight",
+  h3: "text-xl font-medium tracking-tight",
+  li: "text-base placeholder-gray-300",
+  p: "text-base leading-relaxed placeholder-gray-300",
 };
 
 // --- BlockNode ---
 // A single auto-resizing textarea that renders one block.
 
-function BlockNode({ block, setRef, onChange, onKeyDown, theme }) {
+function BlockNode({
+  block,
+  lineNumber,
+  isMarked,
+  setRef,
+  onChange,
+  onKeyDown,
+  onToggleMark,
+  theme,
+}) {
   const internalRef = useRef(null);
 
   const handleRef = (el) => {
@@ -48,23 +65,48 @@ function BlockNode({ block, setRef, onChange, onKeyDown, theme }) {
     "w-full resize-none overflow-hidden bg-transparent focus:outline-none transition-colors ";
 
   return (
-    <div className={`relative ${block.type === "li" ? "pl-6" : ""}`}>
-      {block.type === "li" && (
+    <div
+      className={`flex items-start gap-12 ${BLOCK_ROW_STYLE[block.type] ?? BLOCK_ROW_STYLE.p}`}
+    >
+      <div className="w-14 shrink-0 flex items-center gap-2 justify-end select-none mt-2">
+        <button
+          type="button"
+          onClick={onToggleMark}
+          aria-label={`Toggle marker on line ${lineNumber}`}
+          className={`w-2.5 h-2.5 rounded-full border transition-all ${
+            isMarked
+              ? "bg-red-500 border-red-600"
+              : "bg-transparent border-transparent hover:border-red-500"
+          }`}
+        />
         <span
-          className={`absolute left-0 top-2.5 w-1.5 h-1.5 ${theme === "dark" ? "bg-zinc-100" : "bg-black"}`}
-        ></span>
-      )}
-      <textarea
-        ref={handleRef}
-        value={block.text}
-        placeholder={
-          block.type === "p" ? "Type '# ' for headings, '- ' for lists..." : ""
-        }
-        rows={1}
-        className={`${baseClass}${BLOCK_STYLE[block.type] ?? BLOCK_STYLE.p} ${theme === "dark" ? "text-zinc-100" : "text-gray-700"}`}
-        onChange={(e) => onChange(e.target.value)}
-        onKeyDown={onKeyDown}
-      />
+          className={`text-[10px] font-mono ${
+            theme === "dark" ? "text-zinc-500" : "text-gray-400"
+          }`}
+        >
+          {lineNumber}
+        </span>
+      </div>
+      <div className={`relative flex-1 ${block.type === "li" ? "pl-6" : ""}`}>
+        {block.type === "li" && (
+          <span
+            className={`absolute left-0 top-2.5 w-1.5 h-1.5 ${theme === "dark" ? "bg-zinc-100" : "bg-black"}`}
+          ></span>
+        )}
+        <textarea
+          ref={handleRef}
+          value={block.text}
+          placeholder={
+            block.type === "p"
+              ? "Type '# ' for headings, '- ' for lists..."
+              : ""
+          }
+          rows={1}
+          className={`${baseClass}${BLOCK_TEXT_STYLE[block.type] ?? BLOCK_TEXT_STYLE.p} ${theme === "dark" ? "text-zinc-100" : "text-gray-700"}`}
+          onChange={(e) => onChange(e.target.value)}
+          onKeyDown={onKeyDown}
+        />
+      </div>
     </div>
   );
 }
@@ -72,7 +114,14 @@ function BlockNode({ block, setRef, onChange, onKeyDown, theme }) {
 // --- BlockEditor ---
 // Manages the full list of blocks and keyboard navigation.
 
-export function BlockEditor({ blocks, onChange, onSave, theme = "light" }) {
+export function BlockEditor({
+  blocks,
+  markedBlockIds = [],
+  onChange,
+  onToggleMark,
+  onSave,
+  theme = "light",
+}) {
   const [focusId, setFocusId] = useState(null);
   const inputRefs = useRef({});
 
@@ -157,9 +206,12 @@ export function BlockEditor({ blocks, onChange, onSave, theme = "light" }) {
         <BlockNode
           key={block.id}
           block={block}
+          lineNumber={i + 1}
+          isMarked={markedBlockIds.includes(block.id)}
           setRef={(el) => (inputRefs.current[block.id] = el)}
           onChange={(val) => updateBlock(i, val)}
           onKeyDown={(e) => handleKeyDown(e, i)}
+          onToggleMark={() => onToggleMark?.(block.id)}
           theme={theme}
         />
       ))}

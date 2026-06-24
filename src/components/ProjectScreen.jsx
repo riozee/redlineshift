@@ -44,6 +44,32 @@ export function ProjectScreen({
     onUpdate({ history: [...project.history, commit] });
   };
 
+  const handleBlocksChange = (newBlocks) => {
+    const validIds = new Set(newBlocks.map((block) => block.id));
+    const currentMarked = Array.isArray(project.markedBlockIds)
+      ? project.markedBlockIds
+      : [];
+    const nextMarked = currentMarked.filter((id) => validIds.has(id));
+
+    onUpdate({
+      blocks: newBlocks,
+      markedBlockIds: nextMarked,
+    });
+  };
+
+  const toggleMarkedBlock = (blockId) => {
+    const currentMarked = Array.isArray(project.markedBlockIds)
+      ? project.markedBlockIds
+      : [];
+    const isMarked = currentMarked.includes(blockId);
+
+    onUpdate({
+      markedBlockIds: isMarked
+        ? currentMarked.filter((id) => id !== blockId)
+        : [...currentMarked, blockId],
+    });
+  };
+
   return (
     <div
       className={`min-h-screen w-full flex flex-col p-4 md:p-8 transition-colors duration-700 ease-in-out ${
@@ -201,7 +227,9 @@ export function ProjectScreen({
         <div className="flex-1 overflow-y-auto p-4 md:p-6 relative">
           <BlockEditor
             blocks={project.blocks}
-            onChange={(newBlocks) => onUpdate({ blocks: newBlocks })}
+            markedBlockIds={project.markedBlockIds}
+            onChange={handleBlocksChange}
+            onToggleMark={toggleMarkedBlock}
             onSave={saveSnapshot}
             theme={theme}
           />

@@ -17,6 +17,15 @@ function SyncDot({ status }) {
 
 function ProjectCard({ project, now, onSelect, theme }) {
   const bgColor = getDeadlineColor(project.deadline, now);
+  const markedIds = Array.isArray(project.markedBlockIds)
+    ? project.markedBlockIds
+    : [];
+  const markedText = (project.blocks || [])
+    .filter((block) => markedIds.includes(block.id))
+    .map((block) => block.text.trim())
+    .filter(Boolean)
+    .join("\n");
+
   return (
     <div
       onClick={() => onSelect(project.id)}
@@ -31,8 +40,17 @@ function ProjectCard({ project, now, onSelect, theme }) {
         {project.emoji}
       </div>
       <h3 className="text-lg font-medium leading-snug mb-3">{project.name}</h3>
+      <div className="flex-1 min-h-0 overflow-hidden mb-3">
+        {markedText ? (
+          <p
+            className={`text-sm leading-6 whitespace-pre-wrap wrap-break-word ${theme === "dark" ? "text-zinc-200/90" : "text-gray-800/90"}`}
+          >
+            {markedText}
+          </p>
+        ) : null}
+      </div>
       <div
-        className={`mt-auto pt-4 border-t flex items-center justify-between gap-4 font-mono text-[11px] uppercase tracking-wider ${theme === "dark" ? "border-white/10 text-zinc-300" : "border-gray-900/10 text-gray-600"}`}
+        className={`pt-4 border-t flex items-center justify-between gap-4 font-mono text-[11px] uppercase tracking-wider ${theme === "dark" ? "border-white/10 text-zinc-300" : "border-gray-900/10 text-gray-600"}`}
       >
         <span>{formatTimeLeft(project.deadline, now)}</span>
         <span className="text-right">

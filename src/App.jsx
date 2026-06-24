@@ -21,6 +21,9 @@ const normalizeProject = (project) => ({
   progress: 0,
   archived: false,
   ...project,
+  markedBlockIds: Array.isArray(project.markedBlockIds)
+    ? project.markedBlockIds
+    : [],
 });
 
 const normalizeProjects = (items) => items.map(normalizeProject);
@@ -160,6 +163,7 @@ export default function App() {
         deadline: Date.now() + 7 * MS_PER_DAY,
         progress: 0,
         archived: false,
+        markedBlockIds: [],
         blocks: [
           { id: generateId(), type: "h1", text: "Title" },
           { id: generateId(), type: "p", text: "" },
